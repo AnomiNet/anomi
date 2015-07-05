@@ -12,9 +12,13 @@ type Post struct {
 	Tldr         string  `json:"tldr"`
 	Depth        int64   `json:"depth"`
 	ChildIds     []int64 `json:"child_ids"`
+	Score        int64   `json:"score"`
 }
 
 type PostScore struct {
 	PostId int64 `json:"post_id"`
 	Score  int64 `json:"score"`
+}
+
+func CreatePost(p *Post) {
 }
