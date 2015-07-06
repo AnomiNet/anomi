@@ -12,11 +12,14 @@ import (
 	"strings"
 )
 
+const ACTIVE_USERS = "active.users"
+const DEFAULT_TOP_POST_LIMIT = 100
+
 type ApiEnv struct {
 	*env.Env
 }
 
-func (e ApiEnv) ModelEnv() model.ModelEnv {
+func (e ApiEnv) Model() model.ModelEnv {
 	return model.ModelEnv{e.Env}
 }
 
@@ -57,6 +60,7 @@ func StartServer(port string, e *env.Env) {
 
 	// Register apis
 	aenv.registerUserApis(wsContainer)
+	aenv.registerPostApis(wsContainer)
 
 	// Uncomment to add some swagger
 	//config := swagger.Config{

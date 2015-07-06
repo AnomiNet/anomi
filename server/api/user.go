@@ -31,10 +31,12 @@ func (e ApiEnv) createUser(request *restful.Request, response *restful.Response)
 		response.WriteErrorString(400, "No handle specified")
 		return
 	}
-	err = e.ModelEnv().CreateUser(&usr)
+	err = e.Model().CreateUser(&usr)
 	if err != nil {
 		response.WriteErrorString(500, err.Error())
 		return
 	}
+
+	e.C.Set(ACTIVE_USERS+"."+usr.Token, usr.Handle)
 	response.WriteEntity(usr)
 }

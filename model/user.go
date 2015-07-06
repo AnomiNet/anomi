@@ -25,34 +25,34 @@ type Vote struct {
 const TOKEN_LEN = 16
 const NEXT_USER_ID_KEY = "counter:next.user.id"
 
-var ErrUserExists = errors.New("anomi/model: user already exists")
+var ErrUserExists = errors.New("User with this handle already exists")
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
-func GenerateToken() (string, error) {
+func (u *User) GenerateToken() {
 	s := make([]rune, TOKEN_LEN)
-	max := big.NewInt(int64(len(s)))
+	max := big.NewInt(int64(len(letters)))
 	for i := range s {
 		j, err := rand.Int(rand.Reader, max)
 		if err != nil {
-			return "", err
+			panic("Couldn't generate token")
 		}
 		s[i] = letters[j.Int64()]
 	}
-	return string(s), nil
+	u.Token = string(s)
 }
 
-func (e ModelEnv) GetUserByHandle(handle string) *User {
+func (e ModelEnv) GetUserByHandle(handle string) (*User, error) {
 	u := User{}
 	err := e.C.Get(&u, handle)
 	if err != nil {
-		return nil
+		return nil, err
 	} else {
-		return &u
+		return &u, err
 	}
 }
 
 func (e ModelEnv) CreateUser(u *User) error {
-	if e.GetUserByHandle(u.Handle) != nil {
+	if ok, _ := e.GetUserByHandle(u.Handle); ok != nil {
 		return ErrUserExists
 	}
 	var err error
@@ -60,10 +60,7 @@ func (e ModelEnv) CreateUser(u *User) error {
 	if err != nil {
 		return err
 	}
-	u.Token, err = GenerateToken()
-	if err != nil {
-		return err
-	}
+	u.GenerateToken()
 	u.Touch()
 	u.PostIds = make([]int64, 0)
 	u.VotePostIds = make([]int64, 0)
