@@ -134,6 +134,21 @@ func (r *RedisCache) ZAdd(set string, score int64, v interface{}) error {
 
 }
 
+func (r *RedisCache) ZIncrBy(set string, incr int64, v interface{}) error {
+	if v == nil {
+		panic("can't add to nil")
+	}
+	b, err := r.S.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	t := GetBaseType(v)
+	_, err = r.C.Do("ZINCRBY", "set"+r.Sep+r.GetTypePrefix(t)+r.Sep+set, incr, b)
+	return err
+
+}
+
 func (r *RedisCache) ZScore(set string, v interface{}) (int64, error) {
 	if v == nil {
 		panic("can't get score of nil")

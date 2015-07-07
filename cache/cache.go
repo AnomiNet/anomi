@@ -1,8 +1,8 @@
 package cache
 
 import (
-	"github.com/anominet/anomi/env/internal"
 	"encoding/json"
+	"github.com/anominet/anomi/env/internal"
 	"reflect"
 )
 
@@ -18,6 +18,7 @@ type Cache interface {
 	GetList(v interface{}, id string) error
 	Append(id string, v interface{}) error
 	ZAdd(set string, score int64, v interface{}) error
+	ZIncrBy(set string, incr int64, v interface{}) error
 	ZScore(set string, v interface{}) (int64, error)
 	ZRangeByScore(v interface{}, set string, dir bool, limit int64) ([]int64, error)
 	SelectDb(id int64) error

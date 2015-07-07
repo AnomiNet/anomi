@@ -11,7 +11,6 @@ import (
 	"strings"
 )
 
-const ACTIVE_USERS = "active.users"
 const DEFAULT_TOP_POST_LIMIT = 100
 
 type ApiEnv struct {
@@ -55,10 +54,10 @@ func StartServer(port string, e *env.Env) {
 	//wsContainer.EnableContentEncoding(true)
 	wsContainer.Filter(aenv.ReqLogger)
 
-
 	// Register apis
 	aenv.registerUserApis(wsContainer)
 	aenv.registerPostApis(wsContainer)
+	aenv.registerVoteApis(wsContainer)
 
 	// Uncomment to add some swagger
 	//config := swagger.Config{

@@ -24,7 +24,7 @@ func (e ApiEnv) createUser(request *restful.Request, response *restful.Response)
 	usr := model.User{}
 	err := request.ReadEntity(&usr)
 	if err != nil {
-		response.WriteErrorString(500, err.Error())
+		response.WriteErrorString(400, err.Error())
 		return
 	}
 	if usr.Handle == "" {
@@ -37,6 +37,6 @@ func (e ApiEnv) createUser(request *restful.Request, response *restful.Response)
 		return
 	}
 
-	e.C.Set(ACTIVE_USERS+"."+usr.Token, usr.Handle)
+	e.Model().SetActiveUser(&usr)
 	response.WriteEntity(usr)
 }

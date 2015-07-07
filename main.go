@@ -33,8 +33,7 @@ var (
 func main() {
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	e := &env.Env{}
-	e.Initialize(*debug)
+	e := env.New(*debug)
 	e.C.SetTypePrefixRegistry(model.TypePrefixRegistry)
 
 	api.StartServer(strconv.Itoa(*port), e)

@@ -16,14 +16,10 @@ type User struct {
 	VotePostIds []int64 `json:"vote_post_ids"`
 }
 
-type Vote struct {
-	PostId int64 `json:"post_id"`
-	UserId int64 `json:"user_id"`
-	Vector int8  `json:"vector"`
-}
-
+//FIXME seperator
 const TOKEN_LEN = 16
 const NEXT_USER_ID_KEY = "counter:next.user.id"
+const ACTIVE_USERS_KEY = "active.users"
 
 var ErrUserExists = errors.New("User with this handle already exists")
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -66,6 +62,16 @@ func (e ModelEnv) CreateUser(u *User) error {
 	u.VotePostIds = make([]int64, 0)
 
 	return e.C.Set(u.Handle, u)
+}
+
+func (e ModelEnv) SetActiveUser(u *User) error {
+	return e.C.Set(ACTIVE_USERS_KEY+"."+u.Token, u.Handle)
+}
+
+func (e ModelEnv) GetActiveUser(tok string) (string, error) {
+	var current_user string
+	err := e.C.Get(&current_user, ACTIVE_USERS_KEY+"."+tok)
+	return current_user, err
 }
 
 func (u *User) Touch() {

@@ -8,18 +8,19 @@ import (
 )
 
 type Post struct {
-	Id           int64   `json:"id"`
-	CreationTime int64   `json:"created_at"`
-	UserHandle   string  `json:"user_handle"`
-	UserId       int64   `json:"user_id"`
-	ParentId     int64   `json:"parent_id"`
-	RootId       int64   `json:"root_id"`
-	Url          string  `json:"url"`
-	Body         string  `json:"body"`
-	Tldr         string  `json:"tldr"`
-	Depth        int64   `json:"depth"`
-	ChildIds     []int64 `json:"child_ids"` // Kept denormalized in redis
-	Score        int64   `json:"score"`
+	Id              int64   `json:"id"`
+	CreationTime    int64   `json:"created_at"`
+	UserHandle      string  `json:"user_handle"`
+	UserId          int64   `json:"user_id"`
+	CurrentUserVote int8    `json:"current_user_vote"`
+	ParentId        int64   `json:"parent_id"`
+	RootId          int64   `json:"root_id"`
+	Url             string  `json:"url"`
+	Body            string  `json:"body"`
+	Tldr            string  `json:"tldr"`
+	Depth           int64   `json:"depth"`
+	ChildIds        []int64 `json:"child_ids"` // Kept denormalized in redis
+	Score           int64   `json:"score"`
 }
 
 type PostScore struct {
@@ -27,6 +28,7 @@ type PostScore struct {
 	Score  int64 `json:"score"`
 }
 
+//FIXME seperator
 const NEXT_POST_ID_KEY = "counter:next.post.id"
 const TOP_POSTS_KEY = "zset:top.posts"
 
@@ -70,11 +72,13 @@ func (e ModelEnv) GetPostNormalized(id int64) (*Post, error) {
 
 func (e ModelEnv) GetPostChildIds(id int64) ([]int64, error) {
 	list := []int64{}
+	//FIXME seperator
 	err := e.C.GetList(&list, "child.ids:"+strconv.FormatInt(id, 10))
 	return list, err
 }
 
 func (e ModelEnv) AppendPostChildId(pid, cid int64) error {
+	//FIXME seperator
 	return e.C.Append("child.ids:"+strconv.FormatInt(pid, 10), cid)
 }
 
@@ -89,10 +93,11 @@ func (e ModelEnv) CreatePost(p *Post) error {
 	if p.ParentId != 0 {
 		par, err := e.GetPost(p.ParentId)
 		if err != nil {
+			// FIXME
 			//if err == redis.ErrNil {
-				return ErrInvalidParent
+			return ErrInvalidParent
 			//} else {
-				//return err
+			//return err
 			//}
 		}
 		p.Depth = par.Depth + 1
@@ -161,7 +166,6 @@ func (e ModelEnv) GetPostInContext(id int64) ([]Post, error) {
 	posts_len += len(post.ChildIds)
 	posts := make([]Post, posts_len)
 
-
 	posts[0] = *post
 
 	i := 1
@@ -172,7 +176,7 @@ func (e ModelEnv) GetPostInContext(id int64) ([]Post, error) {
 			return nil, err
 		}
 		posts[i] = *p
-		i=i+1
+		i = i + 1
 	}
 
 	// FIXME recurse
@@ -182,7 +186,7 @@ func (e ModelEnv) GetPostInContext(id int64) ([]Post, error) {
 			return nil, err
 		}
 		posts[i] = *p
-		i=i+1
+		i = i + 1
 	}
 
 	return posts, nil

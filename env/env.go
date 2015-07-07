@@ -1,9 +1,9 @@
 package env
 
 import (
-	"github.com/anominet/anomi/env/internal"
-	"github.com/anominet/anomi/cache"
 	log "github.com/Sirupsen/logrus"
+	"github.com/anominet/anomi/cache"
+	"github.com/anominet/anomi/env/internal"
 )
 
 const (
@@ -17,10 +17,11 @@ var DEFAULT_SERIALIZER = cache.JsonSerialzer{}
 type Env struct {
 	C          cache.Cache
 	AuthHeader string
-	Log internal.Logger 
+	Log        internal.Logger
 }
 
-func (e *Env) Initialize(debug bool) {
+func New(debug bool) *Env {
+	e := Env{}
 	e.Log = internal.Logger{log.New()}
 	e.Log.Formatter = &log.TextFormatter{
 		ForceColors:      true,
@@ -40,4 +41,5 @@ func (e *Env) Initialize(debug bool) {
 	e.C.SetSeparator(DEFAULT_SEPARATOR)
 	e.C.SetLogger(e.Log)
 	e.AuthHeader = DEFAULT_AUTH_HEADER
+	return &e
 }

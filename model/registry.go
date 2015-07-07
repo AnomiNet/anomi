@@ -14,6 +14,6 @@ var TypePrefixRegistry = map[reflect.Type]string{
 	reflect.TypeOf(Vote{}):      "vote",
 	reflect.TypeOf(Post{}):      "post",
 	reflect.TypeOf(PostScore{}): "postscore",
-	reflect.TypeOf(int64(42)):    "int64",
-	reflect.TypeOf("42"):          "string",
+	reflect.TypeOf(int64(42)):   "int64",
+	reflect.TypeOf("42"):        "string",
 }
