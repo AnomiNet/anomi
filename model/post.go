@@ -50,7 +50,28 @@ func (e ModelEnv) GetPost(id int64) (*Post, error) {
 	}
 }
 
-func (e ModelEnv) GetPostChildIds(id int64) {
+func (e ModelEnv) GetPostNormalized(id int64) (*Post, error) {
+	p := Post{}
+	err := e.C.Get(&p, strconv.FormatInt(id, 10))
+	if err != nil {
+		return nil, err
+	}
+	p.Score, err = e.C.ZScore(TOP_POSTS_KEY, id)
+	if err != nil {
+		e.Log.Error(err)
+		return nil, err
+	}
+	p.ChildIds, err = e.GetPostChildIds(id)
+	if err != nil {
+		return nil, err
+	}
+	return &p, err
+}
+
+func (e ModelEnv) GetPostChildIds(id int64) ([]int64, error) {
+	list := []int64{}
+	err := e.C.GetList(&list, "child.ids:"+strconv.FormatInt(id, 10))
+	return list, err
 }
 
 func (e ModelEnv) AppendPostChildId(pid, cid int64) error {
@@ -68,9 +89,14 @@ func (e ModelEnv) CreatePost(p *Post) error {
 	if p.ParentId != 0 {
 		par, err := e.GetPost(p.ParentId)
 		if err != nil {
-			return ErrInvalidParent
+			//if err == redis.ErrNil {
+				return ErrInvalidParent
+			//} else {
+				//return err
+			//}
 		}
 		p.Depth = par.Depth + 1
+		p.RootId = par.RootId
 
 		p.Id, err = e.C.Incr(NEXT_POST_ID_KEY)
 		if err != nil {
@@ -91,6 +117,11 @@ func (e ModelEnv) CreatePost(p *Post) error {
 
 	// FIXME using id as score for testing
 	e.C.ZAdd(TOP_POSTS_KEY, p.Id, p.Id)
+
+	if p.ParentId == 0 {
+		p.RootId = p.Id
+	}
+
 	return e.C.Set(strconv.FormatInt(p.Id, 10), p)
 }
 
@@ -102,11 +133,57 @@ func (e ModelEnv) GetTopPosts(limit int64) ([]Post, error) {
 	}
 	posts := make([]Post, len(scores))
 	for i := range posts {
-		err := e.C.Get(&posts[i], strconv.FormatInt(pids[i], 10))
+		p, err := e.GetPost(pids[i])
 		if err != nil {
 			return nil, err
 		}
+		posts[i] = *p
 		posts[i].Score = scores[i]
+		posts[i].ChildIds, err = e.GetPostChildIds(pids[i])
+		if err != nil {
+			return nil, err
+		}
 	}
+	return posts, nil
+}
+
+func (e ModelEnv) GetPostInContext(id int64) ([]Post, error) {
+	post, err := e.GetPostNormalized(id)
+	if err != nil {
+		return nil, err
+	}
+	posts_len := 1
+
+	if post.ParentId != 0 {
+		posts_len += 1
+	}
+
+	posts_len += len(post.ChildIds)
+	posts := make([]Post, posts_len)
+
+
+	posts[0] = *post
+
+	i := 1
+
+	if post.ParentId != 0 {
+		p, err := e.GetPostNormalized(post.ParentId)
+		if err != nil {
+			return nil, err
+		}
+		posts[i] = *p
+		i=i+1
+	}
+
+	// FIXME recurse
+	for j := range post.ChildIds {
+		p, err := e.GetPostNormalized(post.ChildIds[j])
+		if err != nil {
+			return nil, err
+		}
+		posts[i] = *p
+		i=i+1
+	}
+
 	return posts, nil
 }

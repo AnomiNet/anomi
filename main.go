@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"github.com/anominet/anomi/env"
 	"github.com/anominet/anomi/model"
 	"github.com/anominet/anomi/server/api"
@@ -34,20 +33,8 @@ var (
 func main() {
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	log.SetFormatter(&log.TextFormatter{
-		ForceColors:      true,
-		DisableColors:    false,
-		DisableTimestamp: false,
-		FullTimestamp:    true,
-		TimestampFormat:  "",
-		DisableSorting:   false,
-	})
-	if *debug {
-		log.SetLevel(log.DebugLevel)
-	}
-
 	e := &env.Env{}
-	e.Initialize()
+	e.Initialize(*debug)
 	e.C.SetTypePrefixRegistry(model.TypePrefixRegistry)
 
 	api.StartServer(strconv.Itoa(*port), e)

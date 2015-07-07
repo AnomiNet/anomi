@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"github.com/anominet/anomi/env/internal"
 	"github.com/garyburd/redigo/redis"
 	"reflect"
 	"strconv"
@@ -11,6 +12,7 @@ type RedisCache struct {
 	S   Serializer
 	Sep string
 	P   map[reflect.Type]string
+	Log internal.Logger
 }
 
 func (r *RedisCache) Dial(addr string) error {
@@ -28,6 +30,10 @@ func (r *RedisCache) SetSeparator(s string) {
 }
 func (r *RedisCache) SetTypePrefixRegistry(pr map[reflect.Type]string) {
 	r.P = pr
+}
+
+func (r *RedisCache) SetLogger(logger internal.Logger) {
+	r.Log = logger
 }
 
 func (r *RedisCache) GetTypePrefix(t reflect.Type) string {
@@ -88,7 +94,11 @@ func (r *RedisCache) GetList(v interface{}, id string) error {
 	b, err := r.GetListBytes(GetBaseType(v), id)
 
 	if err != nil || b == nil {
-		return err
+		if err == redis.ErrNil {
+			return nil
+		} else {
+			return err
+		}
 	}
 
 	return r.S.Unmarshal(b, v)
@@ -122,6 +132,20 @@ func (r *RedisCache) ZAdd(set string, score int64, v interface{}) error {
 	_, err = r.C.Do("ZADD", "set"+r.Sep+r.GetTypePrefix(t)+r.Sep+set, score, b)
 	return err
 
+}
+
+func (r *RedisCache) ZScore(set string, v interface{}) (int64, error) {
+	if v == nil {
+		panic("can't get score of nil")
+	}
+	b, err := r.S.Marshal(v)
+	if err != nil {
+		return 0, err
+	}
+
+	t := GetBaseType(v)
+
+	return redis.Int64(r.C.Do("ZSCORE", "set"+r.Sep+r.GetTypePrefix(t)+r.Sep+set, b))
 }
 
 func (r *RedisCache) ZRangeByScore(v interface{}, set string, dir bool, limit int64) ([]int64, error) {

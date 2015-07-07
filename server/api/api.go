@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"github.com/anominet/anomi/env"
 	"github.com/anominet/anomi/model"
 	"github.com/emicklei/go-restful"
@@ -23,10 +22,10 @@ func (e ApiEnv) Model() model.ModelEnv {
 	return model.ModelEnv{e.Env}
 }
 
-func ReqLogger(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+func (e ApiEnv) ReqLogger(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	chain.ProcessFilter(req, resp)
 
-	log.Info(fmt.Sprintf(
+	e.Log.Info(fmt.Sprintf(
 		"[anomi/servers/api] %s %s %s %s %d",
 		strings.Split(req.Request.RemoteAddr, ":")[0],
 		req.Request.Method,
@@ -44,19 +43,18 @@ func ReqLogger(req *restful.Request, resp *restful.Response, chain *restful.Filt
 	if err != nil {
 		return
 	}
-	log.Debug("[chromaticity/servers/api] " + string(content))
+	e.Log.Debug("[chromaticity/servers/api] " + string(content))
 }
 
 func StartServer(port string, e *env.Env) {
-	// FIXME, logger from env?
-	restful.SetLogger(log.StandardLogger())
+	restful.SetLogger(e.Log)
+	aenv := ApiEnv{e}
 
 	wsContainer := restful.NewContainer()
 	// Enable gzip encoding
 	//wsContainer.EnableContentEncoding(true)
-	wsContainer.Filter(ReqLogger)
+	wsContainer.Filter(aenv.ReqLogger)
 
-	aenv := ApiEnv{e}
 
 	// Register apis
 	aenv.registerUserApis(wsContainer)
@@ -80,9 +78,9 @@ func StartServer(port string, e *env.Env) {
 	//http.Handle("/api", wsContainer)
 	//http.Handle("/api/", wsContainer)
 
-	log.Info("[anomi/servers/api] start listening on localhost:" + port)
+	e.Log.Info("[anomi/servers/api] start listening on localhost:" + port)
 	//log.Fatal(http.ListenAndServe(":"+port, nil))
 
 	server := &http.Server{Addr: ":" + port, Handler: wsContainer}
-	log.Fatal(server.ListenAndServe())
+	e.Log.Fatal(server.ListenAndServe())
 }

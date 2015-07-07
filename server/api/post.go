@@ -1,6 +1,8 @@
 package api
 
+
 import (
+	"strconv"
 	"github.com/anominet/anomi/model"
 	"github.com/emicklei/go-restful"
 )
@@ -22,7 +24,18 @@ func (e ApiEnv) registerPostApis(c *restful.Container) {
 	ws.Route(ws.GET("").To(e.getPosts).
 		Doc("Get posts").
 		Operation("getPosts").
-		Param(ws.HeaderParameter(e.AuthHeader, "Authorization Token").DataType("string").Required(true)).
+		Writes([]model.Post{}))
+
+	ws.Route(ws.GET("/{post-id}").To(e.getPost).
+		Doc("Get post").
+		Operation("getPost").
+		Param(ws.PathParameter("post-id", "identifier of the post").DataType("int64")).
+		Writes(model.Post{}))
+
+	ws.Route(ws.GET("/{post-id}/context").To(e.getPostInContext).
+		Doc("Get post in context").
+		Operation("getPostInContext").
+		Param(ws.PathParameter("post-id", "identifier of the post").DataType("int64")).
 		Writes([]model.Post{}))
 
 	c.Add(ws)
@@ -70,4 +83,32 @@ func (e ApiEnv) getPosts(request *restful.Request, response *restful.Response) {
 		return
 	}
 	response.WriteEntity(p)
+}
+
+func (e ApiEnv) getPost(request *restful.Request, response *restful.Response) {
+	id, err := strconv.ParseInt(request.PathParameter("post-id"), 10, 64)
+	if err != nil {
+		response.WriteErrorString(400, "The specified post id is not a number")
+		return
+	}
+	p, err := e.Model().GetPostNormalized(id)
+	if err != nil {
+		response.WriteErrorString(400, "The specified post does not exist")
+		return
+	}
+	response.WriteEntity(p)
+}
+
+func (e ApiEnv) getPostInContext(request *restful.Request, response *restful.Response) {
+	id, err := strconv.ParseInt(request.PathParameter("post-id"), 10, 64)
+	if err != nil {
+		response.WriteErrorString(400, "The specified post id is not a number")
+		return
+	}
+	posts, err := e.Model().GetPostInContext(id)
+	if err != nil {
+		response.WriteErrorString(400, "The specified post does not exist")
+		return
+	}
+	response.WriteEntity(posts)
 }
