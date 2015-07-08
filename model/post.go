@@ -19,7 +19,7 @@ type Post struct {
 	Body            string  `json:"body"`
 	Tldr            string  `json:"tldr"`
 	Depth           int64   `json:"depth"`
-	ChildIds        []int64 `json:"child_ids"` // Kept denormalized in redis
+	ChildIds        []int64 `json:"direct_child_ids"` // Kept denormalized in redis
 	Score           int64   `json:"score"`
 }
 
