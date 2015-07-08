@@ -28,6 +28,10 @@ type PostScore struct {
 	Score  int64 `json:"score"`
 }
 
+// FIXME made up context limits for now
+const MAX_DEPTH_DELTA = 10
+const MAX_WIDTH = 100
+
 //FIXME seperator
 const NEXT_POST_ID_KEY = "counter:next.post.id"
 const TOP_POSTS_KEY = "zset:top.posts"
@@ -164,29 +168,42 @@ func (e ModelEnv) GetPostInContext(id int64) ([]Post, error) {
 	}
 
 	posts_len += len(post.ChildIds)
-	posts := make([]Post, posts_len)
+	posts := make([]Post, 0, posts_len)
 
-	posts[0] = *post
-
-	i := 1
+	posts = append(posts, *post)
 
 	if post.ParentId != 0 {
 		p, err := e.GetPostNormalized(post.ParentId)
 		if err != nil {
 			return nil, err
 		}
-		posts[i] = *p
-		i = i + 1
+		posts = append(posts, *p)
 	}
 
-	// FIXME recurse
-	for j := range post.ChildIds {
-		p, err := e.GetPostNormalized(post.ChildIds[j])
+	child_context, err := e.RecurseContext(post.Depth, post.ChildIds)
+	if err != nil {
+		return nil, err
+	}
+	posts = append(posts, child_context...)
+	return posts, nil
+}
+
+func (e ModelEnv) RecurseContext(starting_depth int64, ids []int64) ([]Post, error) {
+	posts := make([]Post, 0, len(ids))
+	for i := 0; i < len(ids) && i < MAX_WIDTH; i++ {
+		p, err := e.GetPostNormalized(ids[i])
 		if err != nil {
 			return nil, err
 		}
-		posts[i] = *p
-		i = i + 1
+		posts = append(posts, *p)
+
+		if len(p.ChildIds) > 0 && (p.Depth-starting_depth) < MAX_DEPTH_DELTA {
+			child_context, err := e.RecurseContext(starting_depth, p.ChildIds)
+			if err != nil {
+				return nil, err
+			}
+			posts = append(posts, child_context...)
+		}
 	}
 
 	return posts, nil
