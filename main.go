@@ -17,23 +17,24 @@ func onHelp(context *kingpin.ParseContext) error {
 }
 
 func onVersion(context *kingpin.ParseContext) error {
-	fmt.Println("0.0.1")
+	fmt.Println(env.VERSION)
 	os.Exit(0)
 	return nil
 }
 
 var (
-	app     = kingpin.New("anomi", "The breakdown of bonds between the individual and community")
-	help    = app.Flag("help", "Show help.").Short('h').Dispatch(onHelp).Hidden().Bool()
-	version = app.Flag("version", "Show application version.").Short('v').Dispatch(onVersion).Bool()
-	debug   = app.Flag("debug", "Enable debug mode.").Short('d').Bool()
-	port    = app.Flag("port", "Api server port.").Short('p').Default("8080").Int()
+	app        = kingpin.New("anomi", "The breakdown of bonds between the individual and community")
+	help       = app.Flag("help", "Show help.").Short('h').Dispatch(onHelp).Hidden().Bool()
+	version    = app.Flag("version", "Show application version.").Short('v').Dispatch(onVersion).Bool()
+	debug      = app.Flag("debug", "Enable debug mode.").Short('d').Bool()
+	port       = app.Flag("port", "Api server port.").Short('p').Default(env.DEFAULT_API_PORT).Int()
+	redis_host = app.Flag("redis", "Redis server host.").Short('r').Default(env.DEFAULT_REDIS_HOST).String()
 )
 
 func main() {
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	e := env.New(*debug)
+	e := env.New(*redis_host, *debug)
 	e.C.SetTypePrefixRegistry(model.TypePrefixRegistry)
 
 	api.StartServer(strconv.Itoa(*port), e)
