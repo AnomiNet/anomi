@@ -1,3 +1,4 @@
 FROM scratch
-ADD anomi /anomi
+ADD anomi /anomi 
+EXPOSE 8080 
 CMD ["/anomi"]

@@ -1,0 +1,24 @@
+web:
+  image: anomiweb
+  links:
+   - api:api
+  environment:
+   - VIRTUAL_HOST=*/, */*
+api:
+  image: anomiapi
+  links:
+    - redis:redis
+  environment:
+    - VIRTUAL_HOST=*/api, */api/*
+redis:
+  image: redis
+  volumes:
+   - /mnt/redis:/data
+  command: redis-server --appendonly yes
+haproxy:
+  image: evquirk/haproxy
+  links:
+    - api:api
+    - web:web
+  ports:
+    - 80:80

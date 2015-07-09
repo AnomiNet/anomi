@@ -2,7 +2,7 @@
 
 Backend API for [Anomi](http://anomi.net), a discussion and content sharing website.
 
-## Development
+## Usage
 
 Install go, then
 
@@ -19,6 +19,14 @@ Run `anomi -h` for help.
 ```bash
 cd ~/$GOPATH/src/github.com/anominet/anomi
 make
+```
+
+### Running docker container
+
+First start a redis container
+
+```bash
+docker run --name anomi-redis -v $DATA_DIR:/data -d redis redis-server --appendonly yes
 ```
 
 ## License
