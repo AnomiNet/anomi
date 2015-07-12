@@ -7,7 +7,7 @@ import (
 
 func (e ApiEnv) registerVoteApis(c *restful.Container) {
 	ws := new(restful.WebService)
-	ws.Path("/votes").
+	ws.Path("/api/votes").
 		Doc("Vote Management").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)

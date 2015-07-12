@@ -1,21 +1,25 @@
 web:
-  image: anomiweb
+  restart: always
+  image: anomi/web
   links:
    - api:api
   environment:
    - VIRTUAL_HOST=*/, */*
 api:
-  image: anomiapi
+  restart: always
+  image: anomi/api
   links:
     - redis:redis
   environment:
     - VIRTUAL_HOST=*/api, */api/*
 redis:
+  restart: always
   image: redis
   volumes:
    - /mnt/redis:/data
   command: redis-server --appendonly yes
 haproxy:
+  restart: always
   image: evquirk/haproxy
   links:
     - api:api

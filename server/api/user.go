@@ -7,7 +7,7 @@ import (
 
 func (e ApiEnv) registerUserApis(c *restful.Container) {
 	ws := new(restful.WebService)
-	ws.Path("/users").
+	ws.Path("/api/users").
 		Doc("User Management").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)

@@ -6,7 +6,7 @@ import (
 	"github.com/anominet/anomi/env"
 	"github.com/anominet/anomi/model"
 	"github.com/emicklei/go-restful"
-	//"github.com/emicklei/go-restful/swagger"
+	"github.com/emicklei/go-restful/swagger"
 	"net/http"
 	"strings"
 )
@@ -45,13 +45,16 @@ func (e ApiEnv) ReqLogger(req *restful.Request, resp *restful.Response, chain *r
 	e.Log.Debug("[chromaticity/servers/api] " + string(content))
 }
 
-func StartServer(port string, e *env.Env) {
+func StartServer(e *env.Env) {
 	restful.SetLogger(e.Log)
 	aenv := ApiEnv{e}
 
 	wsContainer := restful.NewContainer()
+
 	// Enable gzip encoding
 	//wsContainer.EnableContentEncoding(true)
+
+	// Request logging
 	wsContainer.Filter(aenv.ReqLogger)
 
 	// Register apis
@@ -59,27 +62,22 @@ func StartServer(port string, e *env.Env) {
 	aenv.registerPostApis(wsContainer)
 	aenv.registerVoteApis(wsContainer)
 
-	// Uncomment to add some swagger
-	//config := swagger.Config{
-	//WebServices:    wsContainer.RegisteredWebServices(),
-	//WebServicesUrl: "/",
-	//ApiPath:        "/swagger/apidocs.json",
-	//SwaggerPath:    "/swagger/apidocs/",
-	//}
+	if e.SwaggerPath != "" {
+		config := swagger.Config{
+		WebServices:    wsContainer.RegisteredWebServices(),
+		ApiPath:        "/swagger/apidocs.json",
+		SwaggerPath:    "/swagger/apidocs/",
+		SwaggerFilePath: e.SwaggerPath,
+		}
 
-	//Container just for swagger
-	//swContainer := restful.NewContainer()
-	//swagger.RegisterSwaggerService(config, swContainer)
-	//http.Handle("/swagger/", swContainer)
-	//http.Handle("/apidocs/", &AssetHandler{})
+		//Container just for swagger
+		swContainer := restful.NewContainer()
+		swagger.RegisterSwaggerService(config, swContainer)
+		http.Handle("/swagger/", swContainer)
+	}
 
-	// FIXME
-	//http.Handle("/api", wsContainer)
-	//http.Handle("/api/", wsContainer)
+	http.Handle("/api/", wsContainer)
+	e.Log.Info("[anomi/servers/api] start listening on localhost:" + e.ApiPort)
 
-	e.Log.Info("[anomi/servers/api] start listening on localhost:" + port)
-	//log.Fatal(http.ListenAndServe(":"+port, nil))
-
-	server := &http.Server{Addr: ":" + port, Handler: wsContainer}
-	e.Log.Fatal(server.ListenAndServe())
+	e.Log.Fatal(http.ListenAndServe(":" + e.ApiPort, nil))
 }

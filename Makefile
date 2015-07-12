@@ -4,4 +4,4 @@ all: container
 
 container:
 	go build -a -tags netgo -installsuffix netgo .
-	docker build -t anomi-api .
+	docker build -t anomi/api .

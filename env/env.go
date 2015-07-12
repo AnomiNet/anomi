@@ -20,12 +20,14 @@ const (
 var DEFAULT_SERIALIZER = cache.JsonSerialzer{}
 
 type Env struct {
+	ApiPort string
 	C          cache.Cache
 	AuthHeader string
 	Log        internal.Logger
+	SwaggerPath string
 }
 
-func New(redis_host string, debug bool) *Env {
+func New(redis_host, api_port string, debug bool, swagger_path string) *Env {
 	e := Env{}
 	e.Log = internal.Logger{log.New()}
 	e.Log.Formatter = &log.TextFormatter{
@@ -39,6 +41,9 @@ func New(redis_host string, debug bool) *Env {
 	if debug {
 		e.Log.Level = log.DebugLevel
 	}
+
+	e.ApiPort = api_port
+	e.SwaggerPath = swagger_path
 
 	if redis_host == DEFAULT_REDIS_HOST {
 		if redis_host = os.Getenv(REDIS_HOST_ENV_VAR); redis_host == "" {

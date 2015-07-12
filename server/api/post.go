@@ -8,7 +8,7 @@ import (
 
 func (e ApiEnv) registerPostApis(c *restful.Container) {
 	ws := new(restful.WebService)
-	ws.Path("/posts").
+	ws.Path("/api/posts").
 		Doc("Post Management").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
