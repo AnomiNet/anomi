@@ -12,6 +12,7 @@ api:
     - redis:redis
   environment:
     - VIRTUAL_HOST=*/api, */api/*
+  command: /anomi -d
 redis:
   restart: always
   image: redis

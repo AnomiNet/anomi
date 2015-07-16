@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/anominet/anomi/model"
 	"github.com/emicklei/go-restful"
+	"net/http"
 	"strconv"
 )
 
@@ -94,12 +95,12 @@ func (e ApiEnv) getPosts(request *restful.Request, response *restful.Response) {
 func (e ApiEnv) getPost(request *restful.Request, response *restful.Response) {
 	id, err := strconv.ParseInt(request.PathParameter("post-id"), 10, 64)
 	if err != nil {
-		response.WriteErrorString(400, "The specified post id is not a number")
+		e.WriteErrorJsonString(response, http.StatusBadRequest, "The specified post id is not a number")
 		return
 	}
 	post, err := e.Model().GetPostNormalized(id)
 	if err != nil {
-		response.WriteErrorString(400, "The specified post does not exist")
+		e.WriteErrorJsonString(response, http.StatusNotFound, "The specified post does not exist")
 		return
 	}
 	tok := request.HeaderParameter(e.AuthHeader)
@@ -112,12 +113,12 @@ func (e ApiEnv) getPost(request *restful.Request, response *restful.Response) {
 func (e ApiEnv) getPostInContext(request *restful.Request, response *restful.Response) {
 	id, err := strconv.ParseInt(request.PathParameter("post-id"), 10, 64)
 	if err != nil {
-		response.WriteErrorString(400, "The specified post id is not a number")
+		e.WriteErrorJsonString(response, http.StatusBadRequest, "The specified post id is not a number")
 		return
 	}
 	posts, err := e.Model().GetPostInContext(id)
 	if err != nil {
-		response.WriteErrorString(400, "The specified post does not exist")
+		e.WriteErrorJsonString(response, http.StatusNotFound, "The specified post does not exist")
 		return
 	}
 	tok := request.HeaderParameter(e.AuthHeader)

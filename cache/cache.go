@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/anominet/anomi/env/internal"
 	"reflect"
+	"time"
 )
 
 type Cache interface {
@@ -37,6 +38,8 @@ const (
 	HIGH_TO_LOW = true
 	LOW_TO_HIGH = false
 )
+
+var CONNECTION_TIMEOUT = 1 * time.Second
 
 func (JsonSerialzer) Marshal(v interface{}) ([]byte, error) {
 	return json.Marshal(v)

@@ -7,6 +7,14 @@ import (
 	"os"
 )
 
+type Env struct {
+	ApiPort     string
+	C           cache.Cache
+	AuthHeader  string
+	Log         internal.Logger
+	SwaggerPath string
+}
+
 const (
 	VERSION             = "0.1"
 	DEFAULT_API_PORT    = "8080"
@@ -19,15 +27,7 @@ const (
 
 var DEFAULT_SERIALIZER = cache.JsonSerialzer{}
 
-type Env struct {
-	ApiPort string
-	C          cache.Cache
-	AuthHeader string
-	Log        internal.Logger
-	SwaggerPath string
-}
-
-func New(redis_host, api_port string, debug bool, swagger_path string) *Env {
+func New(redis_host, api_port string, debug bool, swagger_path string) (*Env, error) {
 	e := Env{}
 	e.Log = internal.Logger{log.New()}
 	e.Log.Formatter = &log.TextFormatter{
@@ -50,13 +50,20 @@ func New(redis_host, api_port string, debug bool, swagger_path string) *Env {
 			redis_host = DEFAULT_REDIS_HOST
 		}
 	}
-	e.Log.Debug("Using redis host: " + redis_host)
+
+	e.Log.Debug("[env] Using redis host: " + redis_host)
 
 	e.C = &cache.RedisCache{}
-	e.C.Dial(redis_host + ":" + DEFAULT_REDIS_PORT)
+
+	err := e.C.Dial(redis_host + ":" + DEFAULT_REDIS_PORT)
+	if err != nil {
+		return &e, err
+	}
+
 	e.C.SetSerializer(DEFAULT_SERIALIZER)
 	e.C.SetSeparator(DEFAULT_SEPARATOR)
 	e.C.SetLogger(e.Log)
 	e.AuthHeader = DEFAULT_AUTH_HEADER
-	return &e
+
+	return &e, nil
 }

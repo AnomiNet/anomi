@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	"github.com/anominet/anomi/env/internal"
 	"github.com/garyburd/redigo/redis"
 	"reflect"
@@ -17,8 +18,11 @@ type RedisCache struct {
 
 func (r *RedisCache) Dial(addr string) error {
 	var err error
-	r.C, err = redis.Dial("tcp", addr)
-	return err
+	r.C, err = redis.DialTimeout("tcp", addr, CONNECTION_TIMEOUT, CONNECTION_TIMEOUT, CONNECTION_TIMEOUT)
+	if err != nil {
+		return errors.New("[cache/redis] " + err.Error())
+	}
+	return nil
 }
 
 func (r *RedisCache) SetSerializer(s Serializer) {
