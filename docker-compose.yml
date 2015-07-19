@@ -5,6 +5,8 @@ web:
    - api:api
   environment:
    - VIRTUAL_HOST=*/, */*
+  env_file:
+   - '.env.web'
 api:
   restart: always
   image: anomi/api

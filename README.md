@@ -29,6 +29,20 @@ First start a redis container
 docker run --name anomi-redis -v $DATA_DIR:/data -d redis redis-server --appendonly yes
 ```
 
+## Deploying Anomi
+
+Generate a rails secret key and create the file `.env.web`:
+
+```bash
+RAILS_SECRET_KEY=YOUR_SECRET_KEY_HERE
+```
+
+Then run:
+
+```bash
+docker-compose up
+```
+
 ## License
 
 Licensed under the Apache License, Version 2.0 (the "License");

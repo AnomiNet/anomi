@@ -8,3 +8,4 @@
 
 # Project specific ignores
 anomi
+.env.web
