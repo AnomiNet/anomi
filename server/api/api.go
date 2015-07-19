@@ -27,7 +27,11 @@ func (e ApiEnv) Model() model.ModelEnv {
 func (e ApiEnv) ReqLogger(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	chain.ProcessFilter(req, resp)
 
-	raddr := req.Request.Header.Get(DEFAULT_FORWARDED_HEADER)
+	var raddr string
+	if list, ok := req.Request.Header[DEFAULT_FORWARDED_HEADER]; ok {
+		// The last ip will always be the one added by haproxy
+		raddr = list[len(list)-1]
+	}
 	if raddr == "" {
 		raddr = strings.Split(req.Request.RemoteAddr, ":")[0]
 	}

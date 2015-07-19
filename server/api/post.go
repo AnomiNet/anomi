@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/anominet/anomi/model"
+	valid "github.com/asaskevich/govalidator"
 	"github.com/emicklei/go-restful"
 	"net/http"
 	"strconv"
@@ -53,6 +54,22 @@ func (e ApiEnv) createPost(request *restful.Request, response *restful.Response)
 	}
 	if post.Url == "" && post.Body == "" {
 		response.WriteErrorString(400, "Neither url or body specified")
+		return
+	}
+	result, err := valid.ValidateStruct(post)
+	e.Log.Debug(result)
+	if err != nil {
+		switch err := err.(type) {
+		case valid.Errors:
+			for _, err := range err {
+				switch err := err.(type) {
+				case valid.Error:
+					if err.Name == "Url" {
+						e.WriteErrorJsonString(response, 400, "The url specified is invalid")
+					}
+				}
+			}
+		}
 		return
 	}
 

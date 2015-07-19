@@ -15,7 +15,7 @@ type Post struct {
 	CurrentUserVote int8    `json:"current_user_vote"`
 	ParentId        int64   `json:"parent_id"`
 	RootId          int64   `json:"root_id"`
-	Url             string  `json:"url"`
+	Url             string  `json:"url" valid:"url"`
 	Body            string  `json:"body"`
 	Tldr            string  `json:"tldr"`
 	Depth           int64   `json:"depth"`
