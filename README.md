@@ -16,6 +16,8 @@ Run `anomi -h` for help.
 
 ### Building docker container
 
+Make sure you have [docker installed](https://docs.docker.com/installation/) and working.
+
 ```bash
 cd ~/$GOPATH/src/github.com/anominet/anomi
 make
